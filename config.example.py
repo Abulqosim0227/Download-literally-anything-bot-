@@ -14,6 +14,13 @@ BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Example: "1234567890:ABCdefGhIjKlmNoPQRsTUV
 # Your Telegram user ID (get it from @userinfobot)
 ADMIN_ID = 0  # Example: 1234567890
 
+# Multiple Admins (can use /search and admin features)
+# Add all admin IDs here (get from @userinfobot)
+ADMIN_IDS = [
+    0,  # Your ID
+    # 987654321,  # Add more admin IDs here
+]
+
 # ==============================================================================
 # OPTIONAL: Large File Support (Up to 2GB)
 # ==============================================================================

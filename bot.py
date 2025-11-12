@@ -474,8 +474,14 @@ Just send me a link to get started! 🚀"""
         await admin_callback(query, action)
         return
     elif query.data.startswith("search_"):
-        # Handle search callbacks (admin only)
-        if query.from_user.id != ADMIN_ID:
+        # Handle search callbacks (admin only) - check multiple admins
+        try:
+            from config import ADMIN_IDS
+            is_admin = query.from_user.id in ADMIN_IDS
+        except ImportError:
+            is_admin = query.from_user.id == ADMIN_ID
+
+        if not is_admin:
             await query.answer("❌ Admin only!", show_alert=True)
             return
 
@@ -1144,8 +1150,15 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     Search for songs by text (ADMIN ONLY - Testing Phase)
     Usage: /search <song name or artist>
     """
-    # ADMIN ONLY for testing
-    if update.effective_user.id != ADMIN_ID:
+    # ADMIN ONLY for testing - check if user is in admin list
+    try:
+        from config import ADMIN_IDS
+        is_admin = update.effective_user.id in ADMIN_IDS
+    except ImportError:
+        # Fallback to single ADMIN_ID if ADMIN_IDS not defined
+        is_admin = update.effective_user.id == ADMIN_ID
+
+    if not is_admin:
         await update.message.reply_text("❌ This command is currently in testing (admin only).")
         return
 
