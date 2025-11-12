@@ -699,22 +699,25 @@ Just send me a link to get started! 🚀"""
                             title=context.user_data.get('title', 'Audio')
                         )
 
-                # Record download in database
-                db.record_download(
-                    user_id=query.from_user.id,
-                    download_type="audio",
-                    platform=context.user_data.get('platform', 'unknown'),
-                    url=url
-                )
+                    # Record download in database
+                    db.record_download(
+                        user_id=query.from_user.id,
+                        download_type="audio",
+                        platform=context.user_data.get('platform', 'unknown'),
+                        url=url
+                    )
 
-                await query.edit_message_text("✅ Audio sent successfully! 🎉")
-            except Exception as e:
-                logger.error(f"Error sending audio: {e}")
-                await query.edit_message_text(f"❌ Error sending audio: {str(e)}")
-            finally:
-                # Clean up
+                    await query.edit_message_text("✅ Audio sent successfully! 🎉")
+                except Exception as e:
+                    logger.error(f"Error sending audio: {e}")
+                    await query.edit_message_text(f"❌ Error sending audio: {str(e)}")
+
+            # Clean up
+            try:
                 if os.path.exists(result):
                     os.remove(result)
+            except:
+                pass
         else:
             await query.edit_message_text("❌ Download failed. Please try again.")
 
