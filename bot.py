@@ -71,13 +71,27 @@ class MediaDownloader:
             options['extractor_args'] = {'tiktok': {'webpage_download': True}}
 
         elif 'facebook.com' in url_lower or 'fb.watch' in url_lower:
+            # Facebook has become very restrictive - use aggressive options
             options['http_headers'].update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
                 'Accept-Language': 'en-US,en;q=0.9',
-                'Cookie': '',  # Facebook works better without cookies sometimes
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': 'https://www.facebook.com/',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
             })
-            # Try multiple methods
-            options['extractor_args'] = {'facebook': {'api': ['mobile', 'www']}}
+            # Try multiple extraction methods
+            options['extractor_args'] = {
+                'facebook': {
+                    'api': ['mobile', 'www', 'watch'],
+                    'legacy_api': True,
+                }
+            }
+            # Additional options for stubborn videos
+            options['cookiefile'] = None  # Don't use cookies
+            options['age_limit'] = None  # Ignore age restrictions
 
         elif 'instagram.com' in url_lower:
             options['http_headers'].update({
@@ -104,14 +118,48 @@ class MediaDownloader:
             logger.error(f"Error getting video info for {url}: {error_msg}")
 
             # Provide specific error messages based on platform and error type
-            if "cannot parse data" in error_msg.lower():
-                return None, "❌ Cannot parse this video. The platform may have updated their system.\n\n💡 Try:\n• Update the bot: pip install --upgrade yt-dlp\n• Try a different video from the same platform\n• Report to admin if issue persists"
+            # Facebook has special handling since it's most problematic
+            if ("facebook" in url.lower() or "fb.watch" in url.lower()):
+                if "cannot parse data" in error_msg.lower() or "parse" in error_msg.lower():
+                    return None, (
+                        "❌ Facebook download failed - Cannot parse video data.\n\n"
+                        "Facebook frequently changes their system making downloads difficult.\n\n"
+                        "💡 Solutions:\n"
+                        "• Make sure video is PUBLIC (not friends-only)\n"
+                        "• Use desktop Facebook link (not mobile m.facebook.com)\n"
+                        "• Try: Open video in browser → Right-click → Copy video URL\n"
+                        "• Alternatively: Download from browser instead\n\n"
+                        "⚠️ Note: Facebook intentionally blocks automated downloads.\n"
+                        "Some videos may not be downloadable at all."
+                    )
+                else:
+                    return None, (
+                        "❌ Facebook download failed.\n\n"
+                        "💡 Try:\n"
+                        "• Ensure video is PUBLIC (not friends-only)\n"
+                        "• Use full facebook.com URL (not fb.watch)\n"
+                        "• Right-click video → 'Copy video URL'\n"
+                        "• Some Facebook videos cannot be downloaded"
+                    )
+
+            elif "cannot parse data" in error_msg.lower():
+                return None, (
+                    "❌ Cannot parse this video. The platform may have updated their system.\n\n"
+                    "💡 Try:\n"
+                    "• Update the bot: pip install --upgrade yt-dlp\n"
+                    "• Try a different video from the same platform\n"
+                    "• Report to admin if issue persists"
+                )
 
             elif "tiktok" in url.lower() and ("redirect" in error_msg.lower() or "extract" in error_msg.lower()):
-                return None, "❌ TikTok download failed.\n\n💡 Try:\n• Make sure the video is public\n• Copy the link directly from TikTok app\n• Use the share button and 'Copy link'\n• Avoid shortened links"
-
-            elif "facebook" in url.lower() or "fb.watch" in url.lower():
-                return None, "❌ Facebook download failed.\n\n💡 Try:\n• Make sure the video is PUBLIC (not friends-only)\n• Use the full facebook.com URL (not fb.watch)\n• Right-click video → 'Copy video URL'\n• Some Facebook videos cannot be downloaded due to privacy settings"
+                return None, (
+                    "❌ TikTok download failed.\n\n"
+                    "💡 Try:\n"
+                    "• Make sure the video is public\n"
+                    "• Copy the link directly from TikTok app\n"
+                    "• Use the share button and 'Copy link'\n"
+                    "• Avoid shortened links"
+                )
 
             elif "inappropriate" in error_msg.lower() or "unavailable for certain audiences" in error_msg.lower():
                 return None, "❌ This content is age-restricted or private.\n\n💡 Try:\n• Public posts only\n• Non-age-restricted content"
