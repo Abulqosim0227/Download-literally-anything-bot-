@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2025-11-12
+
+### 🚀 Added - 2GB File Support!
+- **Large File Upload System** - Upload files up to 2GB (not just 50MB!)
+  - Pyrogram Client API integration
+  - Hybrid upload system (automatic method selection)
+  - Files < 50MB → Bot API (fast)
+  - Files 50MB-2GB → Client API (Pyrogram)
+- **Smart Upload Logic** - Automatically chooses best method
+- **Seamless Fallback** - Works without Client API (50MB limit)
+- **GET_API_CREDENTIALS.md** - Step-by-step setup guide
+- **Configuration Options** - ENABLE_LARGE_FILES, API_ID, API_HASH
+
+### 🔧 Improved
+- Updated requirements.txt with pyrogram and tgcrypto
+- Enhanced file size checking and error messages
+- Better upload progress indicators
+- Documentation updated with 2GB support info
+
+### 📚 Documentation
+- Comprehensive guide for getting API credentials
+- Updated README with 2GB feature
+- Setup instructions for large file support
+
 ## [2.2.0] - 2025-11-12
 
 ### ✨ Added
