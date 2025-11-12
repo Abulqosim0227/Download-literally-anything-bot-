@@ -15,6 +15,19 @@ BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Example: "1234567890:ABCdefGhIjKlmNoPQRsTUV
 ADMIN_ID = 0  # Example: 1234567890
 
 # ==============================================================================
+# OPTIONAL: Large File Support (Up to 2GB)
+# ==============================================================================
+# Get these from https://my.telegram.org/apps
+# Enables uploading files larger than 50MB (up to 2GB)
+ENABLE_LARGE_FILES = False  # Set to True to enable 2GB support
+
+API_ID = 0  # Example: 12345678
+API_HASH = ""  # Example: "0123456789abcdef0123456789abcdef"
+
+# Note: Without API_ID and API_HASH, bot works normally with 50MB limit
+# With credentials, bot automatically uses Client API for files over 50MB
+
+# ==============================================================================
 # Download Settings
 # ==============================================================================
 DOWNLOAD_DIR = "downloads"

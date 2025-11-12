@@ -547,43 +547,85 @@ Just send me a link to get started! 🚀"""
         if result and os.path.exists(result):
             file_size = os.path.getsize(result)
 
+            # Check if we need large file uploader
+            try:
+                from large_file_uploader import large_file_uploader, is_large_file_enabled
+                from config import BOT_API_LIMIT
+            except ImportError:
+                BOT_API_LIMIT = 50 * 1024 * 1024
+
             # Check file size
             if file_size > MAX_FILE_SIZE:
                 await query.edit_message_text(
                     f"❌ File is too large ({file_size / 1024 / 1024:.1f} MB). "
-                    f"Telegram bot limit is 50 MB. Try a lower quality."
+                    f"Maximum size: {MAX_FILE_SIZE / 1024 / 1024 / 1024:.1f} GB."
                 )
                 os.remove(result)
                 return
 
-            # Send video
-            await query.edit_message_text("📤 Uploading video...")
+            # Send video (choose method based on file size)
+            file_size_mb = file_size / 1024 / 1024
 
-            try:
-                with open(result, 'rb') as video:
-                    await context.bot.send_video(
-                        chat_id=query.message.chat_id,
-                        video=video,
-                        caption=f"🎬 {context.user_data.get('title', 'Video')[:100]}\n\n📥 Quality: {option}",
-                        supports_streaming=True
-                    )
-
-                # Record download in database
-                db.record_download(
-                    user_id=query.from_user.id,
-                    download_type="video",
-                    platform=context.user_data.get('platform', 'unknown'),
-                    url=url
+            # Use Client API for files >= 50MB if available
+            if file_size >= BOT_API_LIMIT and is_large_file_enabled():
+                await query.edit_message_text(
+                    f"📤 Uploading large video ({file_size_mb:.1f} MB)...\n"
+                    f"Using Client API for files over 50MB"
                 )
 
-                await query.edit_message_text("✅ Video sent successfully! 🎉")
-            except Exception as e:
-                logger.error(f"Error sending video: {e}")
-                await query.edit_message_text(f"❌ Error sending video: {str(e)}")
-            finally:
-                # Clean up
+                try:
+                    success = await large_file_uploader.upload_video(
+                        chat_id=query.message.chat_id,
+                        file_path=result,
+                        caption=f"🎬 {context.user_data.get('title', 'Video')[:100]}\n\n📥 Quality: {option}\n📁 Size: {file_size_mb:.1f} MB"
+                    )
+
+                    if success:
+                        # Record download
+                        db.record_download(
+                            user_id=query.from_user.id,
+                            download_type="video",
+                            platform=context.user_data.get('platform', 'unknown'),
+                            url=url
+                        )
+                        await query.edit_message_text("✅ Large video sent successfully! 🎉")
+                    else:
+                        await query.edit_message_text("❌ Failed to upload video. Try a lower quality.")
+                except Exception as e:
+                    logger.error(f"Error sending large video: {e}")
+                    await query.edit_message_text(f"❌ Error uploading large video: {str(e)}")
+            else:
+                # Use Bot API for files < 50MB
+                await query.edit_message_text(f"📤 Uploading video ({file_size_mb:.1f} MB)...")
+
+                try:
+                    with open(result, 'rb') as video:
+                        await context.bot.send_video(
+                            chat_id=query.message.chat_id,
+                            video=video,
+                            caption=f"🎬 {context.user_data.get('title', 'Video')[:100]}\n\n📥 Quality: {option}",
+                            supports_streaming=True
+                        )
+
+                    # Record download in database
+                    db.record_download(
+                        user_id=query.from_user.id,
+                        download_type="video",
+                        platform=context.user_data.get('platform', 'unknown'),
+                        url=url
+                    )
+
+                    await query.edit_message_text("✅ Video sent successfully! 🎉")
+                except Exception as e:
+                    logger.error(f"Error sending video: {e}")
+                    await query.edit_message_text(f"❌ Error sending video: {str(e)}")
+
+            # Clean up
+            try:
                 if os.path.exists(result):
                     os.remove(result)
+            except:
+                pass
         else:
             await query.edit_message_text("❌ Download failed. Please try again or use a different quality.")
 
@@ -596,26 +638,66 @@ Just send me a link to get started! 🚀"""
         if result and os.path.exists(result):
             file_size = os.path.getsize(result)
 
+            # Check if we need large file uploader
+            try:
+                from large_file_uploader import large_file_uploader, is_large_file_enabled
+                from config import BOT_API_LIMIT
+            except ImportError:
+                BOT_API_LIMIT = 50 * 1024 * 1024
+
             # Check file size
             if file_size > MAX_FILE_SIZE:
                 await query.edit_message_text(
                     f"❌ File is too large ({file_size / 1024 / 1024:.1f} MB). "
-                    f"Telegram bot limit is 50 MB."
+                    f"Maximum size: {MAX_FILE_SIZE / 1024 / 1024 / 1024:.1f} GB."
                 )
                 os.remove(result)
                 return
 
-            # Send audio
-            await query.edit_message_text("📤 Uploading audio...")
+            # Send audio (choose method based on file size)
+            file_size_mb = file_size / 1024 / 1024
 
-            try:
-                with open(result, 'rb') as audio:
-                    await context.bot.send_audio(
+            # Use Client API for files >= 50MB if available
+            if file_size >= BOT_API_LIMIT and is_large_file_enabled():
+                await query.edit_message_text(
+                    f"📤 Uploading large audio ({file_size_mb:.1f} MB)...\n"
+                    f"Using Client API for files over 50MB"
+                )
+
+                try:
+                    success = await large_file_uploader.upload_audio(
                         chat_id=query.message.chat_id,
-                        audio=audio,
-                        caption=f"🎵 {context.user_data.get('title', 'Audio')[:100]}\n\n📥 Format: {option.upper()}",
-                        title=context.user_data.get('title', 'Audio')
+                        file_path=result,
+                        title=context.user_data.get('title', 'Audio'),
+                        caption=f"🎵 {context.user_data.get('title', 'Audio')[:100]}\n\n📥 Format: {option.upper()}\n📁 Size: {file_size_mb:.1f} MB"
                     )
+
+                    if success:
+                        # Record download
+                        db.record_download(
+                            user_id=query.from_user.id,
+                            download_type="audio",
+                            platform=context.user_data.get('platform', 'unknown'),
+                            url=url
+                        )
+                        await query.edit_message_text("✅ Large audio sent successfully! 🎉")
+                    else:
+                        await query.edit_message_text("❌ Failed to upload audio.")
+                except Exception as e:
+                    logger.error(f"Error sending large audio: {e}")
+                    await query.edit_message_text(f"❌ Error uploading large audio: {str(e)}")
+            else:
+                # Use Bot API for files < 50MB
+                await query.edit_message_text(f"📤 Uploading audio ({file_size_mb:.1f} MB)...")
+
+                try:
+                    with open(result, 'rb') as audio:
+                        await context.bot.send_audio(
+                            chat_id=query.message.chat_id,
+                            audio=audio,
+                            caption=f"🎵 {context.user_data.get('title', 'Audio')[:100]}\n\n📥 Format: {option.upper()}",
+                            title=context.user_data.get('title', 'Audio')
+                        )
 
                 # Record download in database
                 db.record_download(
@@ -1469,6 +1551,43 @@ def main() -> None:
     except Exception as e:
         logger.error(f"❌ Error loading text search: {e}")
         logger.error("❌ Text search feature DISABLED (bot works normally)")
+
+    # OPTIONAL: Large File Support (Up to 2GB)
+    # This section is SAFE - if it fails, the bot works with 50MB limit
+    try:
+        from config import ENABLE_LARGE_FILES, API_ID, API_HASH
+    except ImportError:
+        ENABLE_LARGE_FILES = False
+        API_ID = 0
+        API_HASH = ""
+
+    if ENABLE_LARGE_FILES and API_ID and API_HASH:
+        try:
+            from large_file_uploader import initialize_large_file_uploader
+            import asyncio
+
+            # Initialize large file uploader
+            async def init_large_uploader():
+                return await initialize_large_file_uploader(API_ID, API_HASH, BOT_TOKEN)
+
+            loop = asyncio.get_event_loop()
+            success = loop.run_until_complete(init_large_uploader())
+
+            if success:
+                logger.info("✅ Large file support ENABLED - 2GB uploads available!")
+            else:
+                logger.warning("⚠️ Large file initialization failed - using 50MB limit")
+
+        except ImportError as e:
+            logger.warning(f"⚠️ Large file module not available: {e}")
+            logger.warning("⚠️ Large file support DISABLED (install pyrogram and tgcrypto)")
+        except Exception as e:
+            logger.error(f"❌ Error loading large file support: {e}")
+            logger.error("❌ Large file support DISABLED (bot works with 50MB limit)")
+    else:
+        logger.info("ℹ️ Large file support is DISABLED (using 50MB limit)")
+        if not API_ID or not API_HASH:
+            logger.info("💡 To enable 2GB uploads, set API_ID and API_HASH in config.py")
 
     # Add error handler
     application.add_error_handler(error_handler)

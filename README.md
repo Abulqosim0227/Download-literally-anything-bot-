@@ -1,6 +1,6 @@
 # 🎵 Media Downloader Bot
 
-A powerful Telegram bot that downloads videos and audio from multiple social media platforms, with **Music Recognition** (Shazam-like) and **Song Search** features!
+A powerful Telegram bot that downloads videos and audio from multiple social media platforms with **Music Recognition** (Shazam-like), **Song Search**, and **2GB File Support**!
 
 <div align="center">
 
@@ -14,6 +14,10 @@ A powerful Telegram bot that downloads videos and audio from multiple social med
 
 ### 🎥 Media Download
 - **Multi-Platform Support**: Download from YouTube, Instagram, TikTok, Facebook, Twitter/X, Reddit, Vimeo, and more
+- **🚀 2GB File Support**: Upload files up to 2GB (not just 50MB!)
+- **Smart Upload System**: Automatically uses best method based on file size
+  - Files < 50MB → Bot API (fast)
+  - Files 50MB-2GB → Client API (Pyrogram)
 - **Multiple Quality Options**: Choose from Best, 1080p, 720p, 480p, or 360p
 - **Audio Extraction**: Extract audio in MP3, M4A, or OPUS format
 - **User-Friendly Interface**: Interactive inline keyboards for easy navigation
@@ -90,6 +94,15 @@ cp config.example.py config.py
 Edit `config.py` and set:
 - `BOT_TOKEN`: Your bot token from [@BotFather](https://t.me/BotFather)
 - `ADMIN_ID`: Your Telegram user ID from [@userinfobot](https://t.me/userinfobot)
+
+**Optional - Enable 2GB File Support:**
+1. Get API credentials from [my.telegram.org/apps](https://my.telegram.org/apps)
+2. See detailed guide: [GET_API_CREDENTIALS.md](GET_API_CREDENTIALS.md)
+3. Set in `config.py`:
+   - `ENABLE_LARGE_FILES = True`
+   - `API_ID` (your api_id)
+   - `API_HASH` (your api_hash)
+4. Install: `pip install pyrogram tgcrypto`
 
 **Optional - Enable Music Recognition:**
 1. Sign up at [ACRCloud](https://www.acrcloud.com/) (FREE: 2000 recognitions/day)
