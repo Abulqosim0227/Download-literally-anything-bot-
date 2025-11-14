@@ -39,7 +39,8 @@ class Database:
                 "total_users": 0,
                 "platform_stats": {}
             },
-            "download_history": []
+            "download_history": [],
+            "user_settings": {}
         }
 
     def _save_data(self):
@@ -104,7 +105,7 @@ class Database:
         """Get list of banned user IDs"""
         return self.data["banned_users"]
 
-    def record_download(self, user_id: int, download_type: str, platform: str = "unknown", url: str = ""):
+    def record_download(self, user_id: int, download_type: str, platform: str = "unknown", url: str = "", title: str = ""):
         """Record a download in statistics"""
         # Update global stats
         self.data["statistics"]["total_downloads"] += 1
@@ -128,17 +129,18 @@ class Database:
             elif download_type == "audio":
                 self.data["users"][user_id_str]["audio_downloads"] += 1
 
-        # Add to download history (keep last 100)
+        # Add to download history (keep last 1000)
         self.data["download_history"].append({
             "user_id": user_id,
             "type": download_type,
             "platform": platform,
             "url": url,
+            "title": title,
             "timestamp": datetime.now().isoformat()
         })
 
-        if len(self.data["download_history"]) > 100:
-            self.data["download_history"] = self.data["download_history"][-100:]
+        if len(self.data["download_history"]) > 1000:
+            self.data["download_history"] = self.data["download_history"][-1000:]
 
         self._save_data()
 
@@ -155,3 +157,47 @@ class Database:
         users = list(self.data["users"].values())
         sorted_users = sorted(users, key=lambda x: x["total_downloads"], reverse=True)
         return sorted_users[:limit]
+
+    def get_user_history(self, user_id: int, limit: int = 20, download_type: str = None) -> List[dict]:
+        """Get download history for a specific user"""
+        user_downloads = [d for d in self.data["download_history"] if d["user_id"] == user_id]
+
+        # Filter by type if specified
+        if download_type:
+            user_downloads = [d for d in user_downloads if d["type"] == download_type]
+
+        # Return most recent first
+        return user_downloads[-limit:][::-1]
+
+    def clear_user_history(self, user_id: int):
+        """Clear download history for a specific user"""
+        self.data["download_history"] = [d for d in self.data["download_history"] if d["user_id"] != user_id]
+        self._save_data()
+
+    def get_user_settings(self, user_id: int) -> dict:
+        """Get user settings"""
+        user_id_str = str(user_id)
+        if "user_settings" not in self.data:
+            self.data["user_settings"] = {}
+
+        if user_id_str not in self.data["user_settings"]:
+            # Return default settings
+            return {
+                "default_video_quality": "1080p",
+                "default_audio_format": "mp3",
+                "auto_thumbnail": False
+            }
+        return self.data["user_settings"][user_id_str]
+
+    def save_user_settings(self, user_id: int, settings: dict):
+        """Save user settings"""
+        user_id_str = str(user_id)
+        if "user_settings" not in self.data:
+            self.data["user_settings"] = {}
+
+        self.data["user_settings"][user_id_str] = settings
+        self._save_data()
+
+    def get_all_user_ids(self) -> List[int]:
+        """Get all user IDs for broadcasting"""
+        return [int(uid) for uid in self.data["users"].keys()]

@@ -3,3 +3,6 @@ yt-dlp>=2024.11.4
 requests>=2.31.0
 pyrogram>=2.0.0
 tgcrypto>=1.2.5
+psutil>=5.9.0
+fdown-api>=0.1.0
+python-dotenv>=1.0.0

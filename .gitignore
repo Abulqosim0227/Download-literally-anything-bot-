@@ -37,6 +37,13 @@ downloads/
 # Database
 bot_data.json
 
+# Session files (contain auth tokens)
+*.session
+*.session-journal
+
+# Environment variables
+.env
+
 # Test files
 test_*.py
 
